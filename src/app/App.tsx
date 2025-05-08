@@ -4,12 +4,9 @@ import InvoicesList from './components/InvoicesList'
 import InvoiceShow from './components/InvoiceShow'
 import { InvoiceNew } from './components/InvoiceNew'
 
-import GettingStarted from './GettingStarted'
-
 function App() {
   return (
     <div className="px-5">
-      <GettingStarted />
       <Router>
         <Routes>
           <Route path="/invoices/new" Component={InvoiceNew} />
