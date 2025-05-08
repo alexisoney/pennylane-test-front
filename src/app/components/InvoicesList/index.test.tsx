@@ -1,5 +1,6 @@
 import InvoicesList from '.'
-import { render, screen, waitFor, within } from '@testing-library/react'
+import { ReactNode } from 'react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { Paths } from 'api/gen/client'
 import { ApiProvider } from 'api'
@@ -28,25 +29,32 @@ const invoice: Invoice = {
   invoice_lines: [],
 }
 
-beforeEach(() => {
-  axios.resetHandlers()
-  axios.reset()
-})
-
-function renderComponent() {
-  return render(
+function ApiProviderMock({ children }: { children: ReactNode }) {
+  return (
     <ApiProvider url="" token="">
-      <InvoicesList />
-    </ApiProvider>,
-    { wrapper: BrowserRouter }
+      {children}
+    </ApiProvider>
+  )
+}
+
+function Wrapper({ children }: { children: ReactNode }) {
+  return (
+    <BrowserRouter>
+      <ApiProviderMock>{children}</ApiProviderMock>
+    </BrowserRouter>
   )
 }
 
 describe('InvoicesList', () => {
+  beforeEach(() => {
+    axios.resetHandlers()
+    axios.reset()
+  })
+
   it('renders an error alert when network request fails', async () => {
     axios.onGet('/invoices').reply(500)
 
-    renderComponent()
+    render(<InvoicesList />, { wrapper: Wrapper })
 
     const error = await screen.findByRole('alert')
 
@@ -62,12 +70,12 @@ describe('InvoicesList', () => {
 
     axios.onGet('/invoices').reply(200, { invoices })
 
-    renderComponent()
+    render(<InvoicesList />, { wrapper: Wrapper })
 
     expect(axios.history.get.length).toBe(1)
 
     await waitFor(() => {
-      const [_header, ...rows] = screen.getAllByRole('row')
+      const [, ...rows] = screen.getAllByRole('row')
       expect(rows).toHaveLength(invoices.length)
     })
 
@@ -79,7 +87,7 @@ describe('InvoicesList', () => {
   it('displays all table column headers', async () => {
     axios.onGet('/invoices').reply(500)
 
-    renderComponent()
+    render(<InvoicesList />, { wrapper: Wrapper })
 
     await screen.findByRole('alert')
 
@@ -105,7 +113,7 @@ describe('InvoicesList', () => {
       ],
     })
 
-    renderComponent()
+    render(<InvoicesList />, { wrapper: Wrapper })
 
     const date = await screen.findByText('Feb 03, 2021')
 
@@ -119,7 +127,7 @@ describe('InvoicesList', () => {
       ],
     })
 
-    renderComponent()
+    render(<InvoicesList />, { wrapper: Wrapper })
 
     const customer = await screen.findByText('Jane Doe')
 
@@ -131,7 +139,7 @@ describe('InvoicesList', () => {
       .onGet('/invoices')
       .reply(200, { invoices: [{ ...invoice, total: 16458.56 }] })
 
-    renderComponent()
+    render(<InvoicesList />, { wrapper: Wrapper })
 
     const amount = await screen.findByText('$16,458.56')
 
@@ -143,7 +151,7 @@ describe('InvoicesList', () => {
       .onGet('/invoices')
       .reply(200, { invoices: [{ ...invoice, finalized: false }] })
 
-    renderComponent()
+    render(<InvoicesList />, { wrapper: Wrapper })
 
     const status = await screen.findByText('Draft')
 
@@ -155,7 +163,7 @@ describe('InvoicesList', () => {
       .onGet('/invoices')
       .reply(200, { invoices: [{ ...invoice, finalized: true }] })
 
-    renderComponent()
+    render(<InvoicesList />, { wrapper: Wrapper })
 
     const status = await screen.findByText('Pending')
 
@@ -167,7 +175,7 @@ describe('InvoicesList', () => {
       .onGet('/invoices')
       .reply(200, { invoices: [{ ...invoice, finalized: true, paid: true }] })
 
-    renderComponent()
+    render(<InvoicesList />, { wrapper: Wrapper })
 
     const status = await screen.findByText('Paid')
 
@@ -175,36 +183,21 @@ describe('InvoicesList', () => {
   })
 
   it('navigates to the edit invoice page', async () => {
-    const invoices = [
-      {
-        ...invoice,
-        customer: { first_name: 'Jane' },
-      },
-    ]
+    const invoices = [{ ...invoice, customer: { first_name: 'Jane' } }]
 
-    axios.onGet('/invoices').reply(200, {
-      invoices,
-    })
+    axios.onGet('/invoices').reply(200, { invoices })
+
+    const EditPage = () => <div>Edit Page</div>
 
     const router = createMemoryRouter(
       [
-        {
-          path: '/invoices',
-          element: (
-            <ApiProvider url="" token="">
-              <InvoicesList />
-            </ApiProvider>
-          ),
-        },
-        {
-          path: `/invoice/${invoices[0].id}/edit`,
-          element: <div>Edit Page</div>,
-        },
+        { path: '/invoices', element: <InvoicesList /> },
+        { path: `/invoice/${invoices[0].id}/edit`, element: <EditPage /> },
       ],
       { initialEntries: ['/invoices'] }
     )
 
-    render(<RouterProvider router={router} />)
+    render(<RouterProvider router={router} />, { wrapper: ApiProviderMock })
 
     const row = await screen.findByText('Jane')
 
