@@ -47,7 +47,11 @@ const InvoicesList = (): React.ReactElement => {
               const status = finalized ? (paid ? 'Paid' : 'Pending') : 'Draft'
 
               return (
-                <tr key={id} onClick={() => navigate(`/invoice/${id}/edit`)}>
+                <tr
+                  key={id}
+                  onClick={() => navigate(`/invoice/${id}/edit`)}
+                  role="button"
+                >
                   <td>{formatDate(date)}</td>
                   <td>
                     {customer?.first_name} {customer?.last_name}

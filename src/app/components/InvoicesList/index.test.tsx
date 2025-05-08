@@ -1,6 +1,6 @@
 import InvoicesList from '.'
 import { ReactNode } from 'react'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { Paths } from 'api/gen/client'
 import { ApiProvider } from 'api'
@@ -75,7 +75,8 @@ describe('InvoicesList', () => {
     expect(axios.history.get.length).toBe(1)
 
     await waitFor(() => {
-      const [, ...rows] = screen.getAllByRole('row')
+      const table = screen.getByRole('table')
+      const rows = within(table).getAllByRole('button')
       expect(rows).toHaveLength(invoices.length)
     })
 
@@ -189,17 +190,15 @@ describe('InvoicesList', () => {
 
     const EditPage = () => <div>Edit Page</div>
 
-    const router = createMemoryRouter(
-      [
-        { path: '/invoices', element: <InvoicesList /> },
-        { path: `/invoice/${invoices[0].id}/edit`, element: <EditPage /> },
-      ],
-      { initialEntries: ['/invoices'] }
-    )
+    const router = createMemoryRouter([
+      { path: '/', element: <InvoicesList /> },
+      { path: `/invoice/${invoices[0].id}/edit`, element: <EditPage /> },
+    ])
 
     render(<RouterProvider router={router} />, { wrapper: ApiProviderMock })
 
-    const row = await screen.findByText('Jane')
+    const table = await screen.findByRole('table')
+    const row = await within(table).findByRole('button')
 
     await userEvent.click(row)
 
