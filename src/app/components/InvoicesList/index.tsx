@@ -10,15 +10,19 @@ const InvoicesList = (): React.ReactElement => {
   const api = useApi()
   const navigate = useNavigate()
 
+  const [isLoading, setIsLoading] = useState(true)
   const [invoicesList, setInvoicesList] = useState<Invoice[]>([])
   const [error, setError] = useState<string>()
 
   const fetchInvoices = useCallback(async () => {
     try {
+      setIsLoading(true)
       const { data } = await api.getInvoices()
       setInvoicesList(data.invoices)
     } catch (error) {
       setError('Network error')
+    } finally {
+      setIsLoading(false)
     }
   }, [api])
 
@@ -33,41 +37,51 @@ const InvoicesList = (): React.ReactElement => {
           {error}
         </div>
       )}
+
       <Link to="/invoices/new" className="btn btn-primary mb-4">
         Create an invoice
       </Link>
-      <table className="table table-bordered table-striped">
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Customer</th>
-            <th>Amount</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {invoicesList.map(
-            ({ id, date, customer, total, finalized, paid }) => {
-              const status = finalized ? (paid ? 'Paid' : 'Pending') : 'Draft'
 
-              return (
-                <tr
-                  key={id}
-                  onClick={() => navigate(`/invoice/${id}/edit`)}
-                  role="button"
-                >
-                  <td>{formatDate(date)}</td>
-                  <td>
-                    {customer?.first_name} {customer?.last_name}
-                  </td>
-                  <td>{formatCurrency(total)}</td>
-                  <td>{status}</td>
-                </tr>
-              )
-            }
-          )}
-        </tbody>
-      </table>
+      {isLoading && (
+        <div className="spinner-border" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+      )}
+
+      {!isLoading && (
+        <table className="table table-bordered table-striped">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Customer</th>
+              <th>Amount</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {invoicesList.map(
+              ({ id, date, customer, total, finalized, paid }) => {
+                const status = finalized ? (paid ? 'Paid' : 'Pending') : 'Draft'
+
+                return (
+                  <tr
+                    key={id}
+                    onClick={() => navigate(`/invoice/${id}/edit`)}
+                    role="button"
+                  >
+                    <td>{formatDate(date)}</td>
+                    <td>
+                      {customer?.first_name} {customer?.last_name}
+                    </td>
+                    <td>{formatCurrency(total)}</td>
+                    <td>{status}</td>
+                  </tr>
+                )
+              }
+            )}
+          </tbody>
+        </table>
+      )}
     </>
   )
 }

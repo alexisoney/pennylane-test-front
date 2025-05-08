@@ -51,6 +51,19 @@ describe('InvoicesList', () => {
     axios.reset()
   })
 
+  it('displays a loader while fetching data', async () => {
+    axios.onGet('/invoices').reply(200, { invoices: [] })
+
+    render(<InvoicesList />, { wrapper: Wrapper })
+
+    expect(screen.getByText(/loading/i)).toBeInTheDocument()
+    expect(screen.queryByRole('table')).not.toBeInTheDocument()
+
+    await screen.findByRole('table')
+
+    expect(screen.queryByText(/loading/i)).not.toBeInTheDocument()
+  })
+
   it('renders an error alert when network request fails', async () => {
     axios.onGet('/invoices').reply(500)
 
@@ -63,6 +76,8 @@ describe('InvoicesList', () => {
     const rows = screen.getAllByRole('row')
 
     expect(rows).toHaveLength(1)
+
+    expect(screen.queryByText(/loading/i)).not.toBeInTheDocument()
   })
 
   it('renders all invoices in the table', async () => {
