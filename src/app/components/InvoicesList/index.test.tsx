@@ -204,4 +204,23 @@ describe('InvoicesList', () => {
 
     expect(await screen.findByText('Edit Page')).toBeInTheDocument()
   })
+
+  it('navigates to the new invoice page when clicking the create button', async () => {
+    axios.onGet('/invoices').reply(200, { invoices: [] })
+
+    const CreatePage = () => <div>New Invoice Page</div>
+
+    const router = createMemoryRouter([
+      { path: '/', element: <InvoicesList /> },
+      { path: `/invoices/new`, element: <CreatePage /> },
+    ])
+
+    render(<RouterProvider router={router} />, { wrapper: ApiProviderMock })
+
+    const btn = await screen.findByText('Create an invoice')
+
+    userEvent.click(btn)
+
+    expect(await screen.findByText('New Invoice Page')).toBeInTheDocument()
+  })
 })

@@ -4,6 +4,7 @@ import { useEffect, useCallback, useState } from 'react'
 import { formatDate } from 'lib/utils/date'
 import { formatCurrency } from 'lib/utils/currency'
 import { useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 
 const InvoicesList = (): React.ReactElement => {
   const api = useApi()
@@ -32,6 +33,9 @@ const InvoicesList = (): React.ReactElement => {
           {error}
         </div>
       )}
+      <Link to="/invoices/new" className="btn btn-primary mb-4">
+        Create an invoice
+      </Link>
       <table className="table table-bordered table-striped">
         <thead>
           <tr>
