@@ -31,7 +31,9 @@ const InvoicesList = (): React.ReactElement => {
   }, [fetchInvoices])
 
   return (
-    <>
+    <section>
+      <h1>Your Invoices</h1>
+
       {!!error && (
         <div className="alert alert-danger" role="alert">
           {error}
@@ -82,7 +84,7 @@ const InvoicesList = (): React.ReactElement => {
           </tbody>
         </table>
       )}
-    </>
+    </section>
   )
 }
 

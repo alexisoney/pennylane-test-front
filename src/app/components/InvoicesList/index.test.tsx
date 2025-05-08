@@ -3,7 +3,6 @@ import { ReactNode } from 'react'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { Paths } from 'api/gen/client'
-import { ApiProvider } from 'api'
 import AxiosMockAdapter from 'axios-mock-adapter'
 import _axios from 'axios'
 import _ from 'lodash'
@@ -12,6 +11,7 @@ import {
   createMemoryRouter,
   RouterProvider,
 } from 'react-router-dom'
+import { ApiProviderMock } from 'lib/test/ApiProviderMock'
 
 const axios = new AxiosMockAdapter(_axios)
 
@@ -27,14 +27,6 @@ const invoice: Invoice = {
   total: null,
   tax: null,
   invoice_lines: [],
-}
-
-function ApiProviderMock({ children }: { children: ReactNode }) {
-  return (
-    <ApiProvider url="" token="">
-      {children}
-    </ApiProvider>
-  )
 }
 
 function Wrapper({ children }: { children: ReactNode }) {
