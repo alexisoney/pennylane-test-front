@@ -1,10 +1,16 @@
 import InvoicesList from '.'
 import { render, screen, waitFor, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { Paths } from 'api/gen/client'
 import { ApiProvider } from 'api'
 import AxiosMockAdapter from 'axios-mock-adapter'
 import _axios from 'axios'
 import _ from 'lodash'
+import {
+  BrowserRouter,
+  createMemoryRouter,
+  RouterProvider,
+} from 'react-router-dom'
 
 const axios = new AxiosMockAdapter(_axios)
 
@@ -31,7 +37,8 @@ function renderComponent() {
   return render(
     <ApiProvider url="" token="">
       <InvoicesList />
-    </ApiProvider>
+    </ApiProvider>,
+    { wrapper: BrowserRouter }
   )
 }
 
@@ -165,5 +172,44 @@ describe('InvoicesList', () => {
     const status = await screen.findByText('Paid')
 
     expect(status).toBeInTheDocument()
+  })
+
+  it('navigates to the edit invoice page', async () => {
+    const invoices = [
+      {
+        ...invoice,
+        customer: { first_name: 'Jane' },
+      },
+    ]
+
+    axios.onGet('/invoices').reply(200, {
+      invoices,
+    })
+
+    const router = createMemoryRouter(
+      [
+        {
+          path: '/invoices',
+          element: (
+            <ApiProvider url="" token="">
+              <InvoicesList />
+            </ApiProvider>
+          ),
+        },
+        {
+          path: `/invoice/${invoices[0].id}/edit`,
+          element: <div>Edit Page</div>,
+        },
+      ],
+      { initialEntries: ['/invoices'] }
+    )
+
+    render(<RouterProvider router={router} />)
+
+    const row = await screen.findByText('Jane')
+
+    await userEvent.click(row)
+
+    expect(await screen.findByText('Edit Page')).toBeInTheDocument()
   })
 })

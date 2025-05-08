@@ -3,9 +3,11 @@ import { Invoice } from 'types'
 import { useEffect, useCallback, useState } from 'react'
 import { formatDate } from 'lib/utils/date'
 import { formatCurrency } from 'lib/utils/currency'
+import { useNavigate } from 'react-router-dom'
 
 const InvoicesList = (): React.ReactElement => {
   const api = useApi()
+  const navigate = useNavigate()
 
   const [invoicesList, setInvoicesList] = useState<Invoice[]>([])
   const [error, setError] = useState<string>()
@@ -45,7 +47,7 @@ const InvoicesList = (): React.ReactElement => {
               const status = finalized ? (paid ? 'Paid' : 'Pending') : 'Draft'
 
               return (
-                <tr key={id}>
+                <tr key={id} onClick={() => navigate(`/invoice/${id}/edit`)}>
                   <td>{formatDate(date)}</td>
                   <td>
                     {customer?.first_name} {customer?.last_name}
