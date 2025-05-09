@@ -6,13 +6,14 @@ import { useApi } from 'api'
 import { GroupBase } from 'react-select'
 
 interface Props {
+  inputId?: string
   value: Product | null
   onChange: (product: Product | null) => void
 }
 
 const defaultAdditional = { page: 1 }
 
-const ProductAutocomplete = ({ value, onChange }: Props) => {
+const ProductAutocomplete = ({ inputId, value, onChange }: Props) => {
   const api = useApi()
 
   const loadOptions: LoadOptions<
@@ -41,6 +42,7 @@ const ProductAutocomplete = ({ value, onChange }: Props) => {
 
   return (
     <AsyncPaginate
+      inputId={inputId}
       placeholder="Search a product"
       additional={defaultAdditional}
       value={value}

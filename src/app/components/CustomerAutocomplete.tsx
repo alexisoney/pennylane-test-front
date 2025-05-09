@@ -6,6 +6,7 @@ import { useApi } from 'api'
 import { GroupBase } from 'react-select'
 
 interface Props {
+  inputId?: string
   value: Customer | null
   onChange: (Customer: Customer | null) => void
 }
@@ -16,7 +17,7 @@ const getCustomerLabel = (customer: Customer) => {
   return `${customer.first_name} ${customer.last_name}`
 }
 
-const CustomerAutocomplete = ({ value, onChange }: Props) => {
+const CustomerAutocomplete = ({ inputId, value, onChange }: Props) => {
   const api = useApi()
 
   const loadOptions: LoadOptions<
@@ -45,6 +46,7 @@ const CustomerAutocomplete = ({ value, onChange }: Props) => {
 
   return (
     <AsyncPaginate
+      inputId={inputId}
       placeholder="Search a customer"
       getOptionLabel={getCustomerLabel}
       additional={defaultAdditional}
