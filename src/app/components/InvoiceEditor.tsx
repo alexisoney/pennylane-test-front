@@ -1,5 +1,7 @@
+import { useCallback, useState } from 'react'
 import DatePicker from 'react-datepicker'
 import { Controller, useFieldArray, useForm } from 'react-hook-form'
+import { useApi } from 'api'
 
 import { Form } from './Form'
 import CustomerAutocomplete from './CustomerAutocomplete'
@@ -25,11 +27,20 @@ export type InvoiceEditorData = {
 }
 
 type InvoiceEditorProps = {
+  id?: number
   onSubmit: (data: InvoiceEditorData) => Awaited<void>
   defaultValues?: InvoiceEditorData
 }
 
-export function InvoiceEditor({ onSubmit, defaultValues }: InvoiceEditorProps) {
+export function InvoiceEditor({
+  id,
+  onSubmit,
+  defaultValues,
+}: InvoiceEditorProps) {
+  const api = useApi()
+
+  const [isDeleted, setIsDeleted] = useState(false)
+
   const {
     register,
     control,
@@ -51,11 +62,27 @@ export function InvoiceEditor({ onSubmit, defaultValues }: InvoiceEditorProps) {
 
   const isFinalized = watch('finalized') === 'true'
 
+  const setRootError = useCallback(() => {
+    setError('root', { message: 'Oups! Something went wrong. Try again.' })
+  }, [setError])
+
+  const deleteInvoice = useCallback(async () => {
+    try {
+      if (!id) throw Error('ID is required')
+      if (window.confirm('Do you want to delete this invoice?') === true) {
+        await api.deleteInvoice({ id })
+        setIsDeleted(true)
+      }
+    } catch (error) {
+      setRootError()
+    }
+  }, [setRootError, api, id])
+
   async function onSubmitMiddleware(data: InvoiceEditorData) {
     try {
       await onSubmit(data)
     } catch (error) {
-      setError('root', { message: 'Oups! Something went wrong. Try again.' })
+      setRootError()
     }
   }
 
@@ -73,6 +100,12 @@ export function InvoiceEditor({ onSubmit, defaultValues }: InvoiceEditorProps) {
       {isSubmitSuccessful && (
         <div className="alert alert-success" role="alert">
           Invoice Created!
+        </div>
+      )}
+
+      {isDeleted && (
+        <div className="alert alert-success" role="alert">
+          Invoice Deleted!
         </div>
       )}
 
@@ -241,6 +274,14 @@ export function InvoiceEditor({ onSubmit, defaultValues }: InvoiceEditorProps) {
             </button>
           </>
         )}
+
+        <button
+          className="btn btn-danger"
+          type="button"
+          onClick={deleteInvoice}
+        >
+          Trash
+        </button>
       </form>
     </>
   )

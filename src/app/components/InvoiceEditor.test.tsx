@@ -197,6 +197,45 @@ describe('InvoiceEditor', () => {
       expect(select).toBeDisabled()
     }
 
-    expect(screen.queryAllByRole('button')).toHaveLength(0)
+    const actions = [
+      screen.queryByRole('button', { name: /delete/i }),
+      screen.queryByRole('button', { name: /append/i }),
+      screen.queryByRole('button', { name: /submit/i }),
+      screen.queryByRole('button', { name: /finalize/i }),
+    ]
+
+    actions.forEach((action) => {
+      expect(action).not.toBeInTheDocument()
+    })
+  })
+
+  it('deletes an existing invoice', async () => {
+    axios.onDelete('/invoices/123').reply(200, {})
+
+    render(
+      <InvoiceEditor
+        id={123}
+        onSubmit={onSubmit}
+        defaultValues={{
+          customer: getSearchCustomersMock.customers[0],
+          finalized: 'false',
+          lines: [{ product: getSearchProductsMock.products[0], quantity: 1 }],
+        }}
+      />,
+      { wrapper: ApiProviderMock }
+    )
+
+    const deleteButton = await screen.findByRole('button', { name: /trash/i })
+
+    const confirmSpy = jest.spyOn(window, 'confirm')
+    confirmSpy.mockImplementation(() => true)
+
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+
+    userEvent.click(deleteButton)
+
+    const alert = await screen.findByRole('alert')
+
+    expect(alert).toHaveTextContent(/invoice deleted/i)
   })
 })

@@ -87,6 +87,7 @@ const InvoiceShow = () => {
 
   return (
     <InvoiceEditor
+      id={invoice.id}
       onSubmit={onSubmit}
       defaultValues={{
         customer,
