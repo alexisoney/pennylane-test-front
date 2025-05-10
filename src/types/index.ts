@@ -5,6 +5,12 @@ export type Invoice = Awaited<
   ReturnType<OperationMethods['getInvoices']>
 >['data']['invoices'][0]
 
+export type InvoiceCreatePayload = Components.Schemas.InvoiceCreatePayload
+
+export type InvoiceLine = NonNullable<
+  InvoiceCreatePayload['invoice_lines_attributes']
+>[0]
+
 export type Product = Awaited<
   ReturnType<OperationMethods['getSearchProducts']>
 >['data']['products'][0]

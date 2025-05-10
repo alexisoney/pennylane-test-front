@@ -1,53 +1,89 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'react-router'
 import { useApi } from 'api'
+import axios from 'axios'
 
 import { InvoiceEditor, InvoiceEditorData } from '../InvoiceEditor'
 import { Loader } from '../Loader'
 
-import { Customer, Invoice } from 'types'
+import { Customer, Filter, Invoice } from 'types'
+import { toApiPayload } from 'lib/utils/invoice'
 
 const InvoiceShow = () => {
   const { id } = useParams<{ id: string }>()
 
   const api = useApi()
 
+  const [error, setError] = useState<string>()
   const [invoice, setInvoice] = useState<Invoice>()
-  const [customer, setCustomer] = useState<Customer>()
+  const [customer, setCustomer] = useState<Customer | null>(null)
 
-  async function onSubmit(data: InvoiceEditorData) {
-    // TO DO
-  }
+  const getCustomerById = useCallback(
+    async function (customer_id: number | null) {
+      if (typeof customer_id === 'number') {
+        const filter: Filter = [
+          { field: 'customer_id', operator: 'eq', value: `${customer_id}` },
+        ]
+
+        const jsonFilter = JSON.stringify(filter)
+
+        const { data } = await api.getInvoices({ filter: jsonFilter })
+
+        return data.invoices[0]?.customer || null
+      }
+
+      return null
+    },
+    [api]
+  )
+
+  const onSubmit = useCallback(
+    async function (data: InvoiceEditorData) {
+      if (!invoice) throw Error('Invoice is required')
+
+      const id = invoice.id
+
+      await api.putInvoice(
+        { id },
+        { invoice: { id: invoice.id, ...toApiPayload(data) } }
+      )
+    },
+    [invoice, api]
+  )
 
   useEffect(() => {
     async function fetchData() {
       try {
         const { data: invoice } = await api.getInvoice(id)
+        const customer = await getCustomerById(invoice.customer_id)
 
         setInvoice(invoice)
-
-        const {
-          data: { invoices },
-        } = await api.getInvoices({
-          filter: JSON.stringify([
-            {
-              field: 'customer_id',
-              operator: 'eq',
-              value: invoice.customer_id,
-            },
-          ]),
-        })
-
-        setCustomer(invoices[0]?.customer || undefined)
+        setCustomer(customer)
       } catch (error) {
-        // TO DO
+        if (axios.isAxiosError(error)) {
+          switch (error.response?.status) {
+            case 404: {
+              return setError('Oups! Invoice not found.')
+            }
+          }
+        }
+
+        setError('Oups! Something went wrong. Refresh the page.')
       }
     }
 
     fetchData()
-  }, [api, id])
+  }, [api, getCustomerById, id])
 
-  if (!invoice || !customer) return <Loader />
+  if (error) {
+    return (
+      <div className="alert alert-danger" role="alert">
+        {error}
+      </div>
+    )
+  }
+
+  if (!invoice) return <Loader />
 
   return (
     <InvoiceEditor
