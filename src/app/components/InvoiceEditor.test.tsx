@@ -159,4 +159,44 @@ describe('InvoiceEditor', () => {
       ],
     })
   })
+
+  it('displays a finalized invoice in read-only mode', async () => {
+    render(
+      <InvoiceEditor
+        onSubmit={onSubmit}
+        defaultValues={{
+          customer: getSearchCustomersMock.customers[0],
+          finalized: 'true',
+          lines: [
+            {
+              product: getSearchProductsMock.products[0],
+              quantity: 1,
+            },
+            {
+              product: getSearchProductsMock.products[0],
+              quantity: 1,
+            },
+          ],
+        }}
+      />,
+      { wrapper: ApiProviderMock }
+    )
+
+    const inputs = [
+      ...screen.getAllByRole('textbox'),
+      ...screen.getAllByRole('spinbutton'),
+    ]
+
+    for (const input of inputs) {
+      expect(input).toHaveAttribute('readonly')
+    }
+
+    const selects = screen.getAllByRole('combobox')
+
+    for (const select of selects) {
+      expect(select).toBeDisabled()
+    }
+
+    expect(screen.queryAllByRole('button')).toHaveLength(0)
+  })
 })

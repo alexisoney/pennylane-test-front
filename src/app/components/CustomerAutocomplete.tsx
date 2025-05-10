@@ -7,6 +7,7 @@ import { GroupBase } from 'react-select'
 
 interface Props {
   inputId?: string
+  isDisabled?: boolean
   value: Customer | null
   onChange: (Customer: Customer | null) => void
 }
@@ -17,7 +18,12 @@ const getCustomerLabel = (customer: Customer) => {
   return `${customer.first_name} ${customer.last_name}`
 }
 
-const CustomerAutocomplete = ({ inputId, value, onChange }: Props) => {
+const CustomerAutocomplete = ({
+  inputId,
+  isDisabled,
+  value,
+  onChange,
+}: Props) => {
   const api = useApi()
 
   const loadOptions: LoadOptions<
@@ -53,6 +59,7 @@ const CustomerAutocomplete = ({ inputId, value, onChange }: Props) => {
       value={value}
       onChange={onChange}
       loadOptions={loadOptions}
+      isDisabled={isDisabled}
     />
   )
 }
