@@ -14,6 +14,7 @@ import {
   selectProduct,
   setQuantity,
   submitForm,
+  submitFormAsFinalized,
 } from 'lib/test/InvoiceEditorActions'
 
 import { InvoiceEditor } from './InvoiceEditor'
@@ -79,7 +80,7 @@ describe('InvoiceEditor', () => {
     expect(await screen.findAllByText(/delete/i)).toHaveLength(1)
   })
 
-  it('posts a new invoice', async () => {
+  it('submits a draft invoice', async () => {
     render(<InvoiceEditor onSubmit={onSubmit} />, { wrapper: ApiProviderMock })
 
     await selectCustomer()
@@ -95,6 +96,7 @@ describe('InvoiceEditor', () => {
       customer: getSearchCustomersMock.customers[0],
       date: undefined,
       deadline: undefined,
+      finalized: 'false',
       lines: [
         {
           product: getSearchProductsMock.products[0],
@@ -126,5 +128,35 @@ describe('InvoiceEditor', () => {
     expect(alert).toHaveTextContent(/something went wrong/i)
 
     expect(onSubmit).toHaveBeenCalledTimes(1)
+  })
+
+  it('submits a finalized invoice', async () => {
+    render(<InvoiceEditor onSubmit={onSubmit} />, { wrapper: ApiProviderMock })
+
+    await selectCustomer()
+    await selectProduct()
+    await setQuantity()
+    await submitFormAsFinalized()
+
+    await screen.findByText(/invoice created/i)
+
+    expect(onSubmit).toHaveBeenCalledTimes(1)
+
+    expect(onSubmit).toHaveBeenCalledWith({
+      customer: getSearchCustomersMock.customers[0],
+      date: undefined,
+      deadline: undefined,
+      finalized: 'true',
+      lines: [
+        {
+          product: getSearchProductsMock.products[0],
+          label: '',
+          quantity: 1,
+          unit: '',
+          price: '',
+          tax: '',
+        },
+      ],
+    })
   })
 })

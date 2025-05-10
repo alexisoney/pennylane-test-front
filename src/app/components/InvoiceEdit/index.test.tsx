@@ -141,6 +141,7 @@ describe('InvoiceEdit', () => {
         customer_id: invoiceMock.customer_id,
         date: invoiceMock.date,
         deadline: invoiceMock.deadline,
+        finalized: invoiceMock.finalized,
         invoice_lines_attributes: [
           {
             product_id: invoiceMock.invoice_lines[0].product_id,

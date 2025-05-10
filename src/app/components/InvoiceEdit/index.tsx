@@ -92,6 +92,7 @@ const InvoiceShow = () => {
         customer,
         date: invoice.date ? new Date(invoice.date) : undefined,
         deadline: invoice.deadline ? new Date(invoice.deadline) : undefined,
+        finalized: `${invoice.finalized}`,
         lines: invoice.invoice_lines,
       }}
     />

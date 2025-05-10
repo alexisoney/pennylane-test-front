@@ -11,6 +11,7 @@ import 'react-datepicker/dist/react-datepicker.css'
 
 export type InvoiceEditorData = {
   customer: Customer | null
+  finalized: string
   date?: Date
   deadline?: Date
   lines: {
@@ -35,8 +36,10 @@ export function InvoiceEditor({ onSubmit, defaultValues }: InvoiceEditorProps) {
     handleSubmit,
     formState: { errors, isSubmitSuccessful },
     setError,
+    setValue,
   } = useForm<InvoiceEditorData>({
     defaultValues: {
+      finalized: 'false',
       customer: null,
       lines: [{ product: null }],
       ...defaultValues,
@@ -51,6 +54,15 @@ export function InvoiceEditor({ onSubmit, defaultValues }: InvoiceEditorProps) {
     } catch (error) {
       setError('root', { message: 'Oups! Something went wrong. Try again.' })
     }
+  }
+
+  function saveDraft() {
+    handleSubmit(onSubmitMiddleware)()
+  }
+
+  function finalize() {
+    setValue('finalized', 'true')
+    handleSubmit(onSubmitMiddleware)()
   }
 
   return (
@@ -68,6 +80,7 @@ export function InvoiceEditor({ onSubmit, defaultValues }: InvoiceEditorProps) {
       )}
 
       <form onSubmit={handleSubmit(onSubmitMiddleware)}>
+        <input hidden type="text" {...register('finalized')} />
         <div>
           <Form.Label htmlFor="customer">Customer</Form.Label>
           <Controller
@@ -196,7 +209,12 @@ export function InvoiceEditor({ onSubmit, defaultValues }: InvoiceEditorProps) {
           APPEND
         </button>
 
-        <button className="btn btn-primary">Submit</button>
+        <button className="btn btn-secondary" type="button" onClick={saveDraft}>
+          Submit
+        </button>
+        <button className="btn btn-primary" type="button" onClick={finalize}>
+          Finalize
+        </button>
       </form>
     </>
   )

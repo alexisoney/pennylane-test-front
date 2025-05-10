@@ -18,3 +18,7 @@ export async function setQuantity() {
 export async function submitForm() {
   await userEvent.click(screen.getByRole('button', { name: /submit/i }))
 }
+
+export async function submitFormAsFinalized() {
+  await userEvent.click(screen.getByRole('button', { name: /finalize/i }))
+}
