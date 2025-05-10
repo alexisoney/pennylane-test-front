@@ -54,17 +54,17 @@ const invoiceMock = {
 
 function renderComponent() {
   render(
-    <MemoryRouter initialEntries={['/invoices/123/edit']}>
+    <MemoryRouter initialEntries={['/invoices/123']}>
       <ApiProviderMock>
         <Routes>
-          <Route path="/invoices/:id/edit" Component={InvoiceEdit} />
+          <Route path="/invoices/:id" Component={InvoiceEdit} />
         </Routes>
       </ApiProviderMock>
     </MemoryRouter>
   )
 }
 
-describe('InvoiceEdit', () => {
+describe('InvoiceShow', () => {
   beforeEach(() => {
     axios.reset()
 

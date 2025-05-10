@@ -199,7 +199,7 @@ describe('InvoicesList', () => {
 
     const router = createMemoryRouter([
       { path: '/', element: <InvoicesList /> },
-      { path: `/invoices/${invoices[0].id}/edit`, element: <EditPage /> },
+      { path: `/invoices/${invoices[0].id}`, element: <EditPage /> },
     ])
 
     render(<RouterProvider router={router} />, { wrapper: ApiProviderMock })
