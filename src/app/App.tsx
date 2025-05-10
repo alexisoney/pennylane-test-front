@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 
 import InvoicesList from './components/InvoicesList'
 import InvoiceShow from './components/InvoiceShow'
+import InvoiceEdit from './components/InvoiceEdit'
 import { InvoiceNew } from './components/InvoiceNew'
 
 function App() {
@@ -10,6 +11,7 @@ function App() {
       <Router>
         <Routes>
           <Route path="/invoices/new" Component={InvoiceNew} />
+          <Route path="/invoices/:id/edit" Component={InvoiceEdit} />
           <Route path="/invoice/:id" Component={InvoiceShow} />
           <Route path="/" Component={InvoicesList} />
         </Routes>

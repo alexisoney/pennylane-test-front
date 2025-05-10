@@ -1,4 +1,4 @@
-import { OperationMethods } from 'api/gen/client'
+import { Components, OperationMethods } from 'api/gen/client'
 import { Awaited } from './helpers'
 
 export type Invoice = Awaited<
@@ -20,3 +20,11 @@ export type Customer = Awaited<
 export type GetSearchCustomers = Awaited<
   ReturnType<OperationMethods['getSearchCustomers']>
 >['data']
+
+export type Unit = Components.Schemas.Unit
+
+export type Filter = {
+  field: 'customer_id'
+  operator: 'eq'
+  value: string | number
+}[]

@@ -1,19 +1,15 @@
 import DatePicker from 'react-datepicker'
 import { Controller, useFieldArray, useForm } from 'react-hook-form'
 
-import { useApi } from 'api'
-import { to_YYYY_MM_DD } from 'lib/utils/date'
-
 import { Form } from './Form'
 import CustomerAutocomplete from './CustomerAutocomplete'
 import ProductAutocomplete from './ProductAutocomplete'
 
-import type { Customer, Product } from 'types'
-import type { Components } from 'api/gen/client'
+import type { Customer, Product, Unit } from 'types'
 
 import 'react-datepicker/dist/react-datepicker.css'
 
-type FormValues = {
+export type InvoiceEditorData = {
   customer: Customer | null
   date?: Date
   deadline?: Date
@@ -21,41 +17,40 @@ type FormValues = {
     product: Product | null
     quantity: number
     label?: string
-    unit?: Components.Schemas.Unit
-    price?: number
-    tax?: number
+    unit?: Unit
+    price?: number | string
+    tax?: number | string
   }[]
 }
 
-export function InvoiceEditor() {
-  const api = useApi()
+type InvoiceEditorProps = {
+  onSubmit: (data: InvoiceEditorData) => Awaited<void>
+  defaultValues?: InvoiceEditorData
+}
 
+export function InvoiceEditor({ onSubmit, defaultValues }: InvoiceEditorProps) {
   const {
     register,
     control,
     handleSubmit,
     formState: { errors, isSubmitSuccessful },
-  } = useForm<FormValues>({
+    setError,
+  } = useForm<InvoiceEditorData>({
     defaultValues: {
       customer: null,
       lines: [{ product: null }],
+      ...defaultValues,
     },
   })
 
   const { fields, append, remove } = useFieldArray({ control, name: 'lines' })
 
-  async function onSubmit(data: FormValues) {
-    await api.postInvoices(null, {
-      invoice: {
-        customer_id: data.customer?.id as number,
-        date: to_YYYY_MM_DD(data.date),
-        deadline: to_YYYY_MM_DD(data.deadline),
-        invoice_lines_attributes: data.lines.map(({ product, ...attr }) => ({
-          product_id: product?.id as number,
-          ...attr,
-        })),
-      },
-    })
+  async function onSubmitMiddleware(data: InvoiceEditorData) {
+    try {
+      await onSubmit(data)
+    } catch (error) {
+      setError('root', { message: 'Oups! Something went wrong. Try again.' })
+    }
   }
 
   return (
@@ -65,7 +60,14 @@ export function InvoiceEditor() {
           Invoice Created!
         </div>
       )}
-      <form onSubmit={handleSubmit(onSubmit)}>
+
+      {!!errors.root && (
+        <div className="alert alert-danger" role="alert">
+          {errors.root.message}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit(onSubmitMiddleware)}>
         <div>
           <Form.Label htmlFor="customer">Customer</Form.Label>
           <Controller

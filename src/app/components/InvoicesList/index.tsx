@@ -68,7 +68,7 @@ const InvoicesList = (): React.ReactElement => {
                 return (
                   <tr
                     key={id}
-                    onClick={() => navigate(`/invoice/${id}/edit`)}
+                    onClick={() => navigate(`/invoices/${id}/edit`)}
                     role="button"
                   >
                     <td>{formatDate(date)}</td>

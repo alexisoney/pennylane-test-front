@@ -41,21 +41,43 @@ const getSearchProductsMock: GetSearchProducts = {
   ],
 }
 
+async function selectCustomer() {
+  await userEvent.click(screen.getByLabelText(/customer/i))
+  await userEvent.click(await screen.findByText(/^jean\sdupont$/i))
+}
+
+async function selectProduct() {
+  await userEvent.click(screen.getByLabelText(/product/i))
+  await userEvent.click(await screen.findByText(/^tesla\smodel\ss$/i))
+}
+
+async function setQuantity() {
+  await userEvent.type(screen.getByLabelText(/quantity/i), '1')
+}
+
+async function submitForm() {
+  await userEvent.click(screen.getByRole('button', { name: /submit/i }))
+}
+
+const onSubmit = jest.fn()
+
 describe('InvoiceEditor', () => {
   beforeEach(() => {
     axios.resetHandlers()
     axios.reset()
+
+    axios.onGet('/customers/search').reply(200, getSearchCustomersMock)
+    axios.onGet('/products/search').reply(200, getSearchProductsMock)
+
+    onSubmit.mockReset()
   })
 
   it('requires a customer', async () => {
-    axios.onGet('/products/search').reply(200, getSearchProductsMock)
+    render(<InvoiceEditor onSubmit={onSubmit} />, { wrapper: ApiProviderMock })
 
-    render(<InvoiceEditor />, { wrapper: ApiProviderMock })
-
-    await userEvent.click(screen.getByLabelText(/product/i))
-    await userEvent.click(await screen.findByText(/^tesla\smodel\ss$/i))
-
-    await userEvent.click(screen.getByRole('button', { name: /submit/i }))
+    await selectProduct()
+    await setQuantity()
+    await submitForm()
 
     expect(axios.history.post).toHaveLength(0)
 
@@ -63,14 +85,11 @@ describe('InvoiceEditor', () => {
   })
 
   it('requires at least one product', async () => {
-    axios.onGet('/customers/search').reply(200, getSearchCustomersMock)
+    render(<InvoiceEditor onSubmit={onSubmit} />, { wrapper: ApiProviderMock })
 
-    render(<InvoiceEditor />, { wrapper: ApiProviderMock })
-
-    await userEvent.click(screen.getByLabelText(/customer/i))
-    await userEvent.click(await screen.findByText(/^jean\sdupont$/i))
-
-    await userEvent.click(screen.getByRole('button', { name: /submit/i }))
+    await selectCustomer()
+    await setQuantity()
+    await submitForm()
 
     expect(axios.history.post).toHaveLength(0)
 
@@ -78,18 +97,11 @@ describe('InvoiceEditor', () => {
   })
 
   it('requires a quantity', async () => {
-    axios.onGet('/customers/search').reply(200, getSearchCustomersMock)
-    axios.onGet('/products/search').reply(200, getSearchProductsMock)
+    render(<InvoiceEditor onSubmit={onSubmit} />, { wrapper: ApiProviderMock })
 
-    render(<InvoiceEditor />, { wrapper: ApiProviderMock })
-
-    await userEvent.click(screen.getByLabelText(/customer/i))
-    await userEvent.click(await screen.findByText(/^jean\sdupont$/i))
-
-    await userEvent.click(screen.getByLabelText(/product/i))
-    await userEvent.click(await screen.findByText(/^tesla\smodel\ss$/i))
-
-    await userEvent.click(screen.getByRole('button', { name: /submit/i }))
+    await selectCustomer()
+    await selectProduct()
+    await submitForm()
 
     expect(axios.history.post).toHaveLength(0)
 
@@ -97,7 +109,7 @@ describe('InvoiceEditor', () => {
   })
 
   it('requires at least one line', async () => {
-    render(<InvoiceEditor />, { wrapper: ApiProviderMock })
+    render(<InvoiceEditor onSubmit={onSubmit} />, { wrapper: ApiProviderMock })
 
     expect(screen.queryByText(/delete/i)).not.toBeInTheDocument()
 
@@ -107,44 +119,51 @@ describe('InvoiceEditor', () => {
   })
 
   it('posts a new invoice', async () => {
-    axios.onGet('/customers/search').reply(200, getSearchCustomersMock)
-    axios.onGet('/products/search').reply(200, getSearchProductsMock)
-    axios.onPost('/invoices').reply(200, {})
+    render(<InvoiceEditor onSubmit={onSubmit} />, { wrapper: ApiProviderMock })
 
-    render(<InvoiceEditor />, { wrapper: ApiProviderMock })
-
-    await userEvent.click(screen.getByLabelText(/customer/i))
-    await userEvent.click(await screen.findByText(/^jean\sdupont$/i))
-
-    await userEvent.click(screen.getByLabelText(/product/i))
-    await userEvent.click(await screen.findByText(/^tesla\smodel\ss$/i))
-
-    await userEvent.type(screen.getByLabelText(/quantity/i), '1')
-
-    await userEvent.click(screen.getByRole('button', { name: /submit/i }))
+    await selectCustomer()
+    await selectProduct()
+    await setQuantity()
+    await submitForm()
 
     await screen.findByText(/invoice created/i)
 
-    expect(axios.history.post).toHaveLength(1)
+    expect(onSubmit).toHaveBeenCalledTimes(1)
 
-    const body = JSON.parse(axios.history.post[0].data)
-
-    expect(body).toStrictEqual({
-      invoice: {
-        customer_id: getSearchCustomersMock.customers[0].id,
-        date: '',
-        deadline: '',
-        invoice_lines_attributes: [
-          {
-            product_id: getSearchProductsMock.products[0].id,
-            label: '',
-            quantity: 1,
-            unit: '',
-            price: '',
-            tax: '',
-          },
-        ],
-      },
+    expect(onSubmit).toHaveBeenCalledWith({
+      customer: getSearchCustomersMock.customers[0],
+      date: undefined,
+      deadline: undefined,
+      lines: [
+        {
+          product: getSearchProductsMock.products[0],
+          label: '',
+          quantity: 1,
+          unit: '',
+          price: '',
+          tax: '',
+        },
+      ],
     })
+  })
+
+  it('displays an error alert when submission fails', async () => {
+    onSubmit.mockImplementation(async () => Promise.reject())
+
+    render(<InvoiceEditor onSubmit={onSubmit} />, { wrapper: ApiProviderMock })
+
+    await selectCustomer()
+    await selectProduct()
+    await setQuantity()
+
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+
+    await submitForm()
+
+    const alert = await screen.findByRole('alert')
+
+    expect(alert).toHaveTextContent(/something went wrong/i)
+
+    expect(onSubmit).toHaveBeenCalledTimes(1)
   })
 })
