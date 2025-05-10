@@ -1,10 +1,20 @@
-import { InvoiceEditor } from '../InvoiceEditor'
+import { useApi } from 'api'
+import { InvoiceEditor, InvoiceEditorData } from '../InvoiceEditor'
+import { toApiPayload } from 'lib/utils/invoice'
 
-export function InvoiceNew() {
+function InvoiceNew() {
+  const api = useApi()
+
+  async function onSubmit(data: InvoiceEditorData) {
+    await api.postInvoices(null, { invoice: toApiPayload(data) })
+  }
+
   return (
     <section>
       <h1>New Invoice</h1>
-      <InvoiceEditor />
+      <InvoiceEditor onSubmit={onSubmit} />
     </section>
   )
 }
+
+export default InvoiceNew
