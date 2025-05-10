@@ -1,63 +1,24 @@
 import _axios from 'axios'
 import AxiosMockAdapter from 'axios-mock-adapter'
-import { ApiProviderMock } from 'lib/test/ApiProviderMock'
 
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
+import { ApiProviderMock } from 'lib/test/ApiProviderMock'
+import {
+  getSearchCustomersMock,
+  getSearchProductsMock,
+} from 'lib/test/InvoiceEditorMocks'
+import {
+  selectCustomer,
+  selectProduct,
+  setQuantity,
+  submitForm,
+} from 'lib/test/InvoiceEditorActions'
+
 import { InvoiceEditor } from './InvoiceEditor'
-import { GetSearchCustomers, GetSearchProducts } from 'types'
 
 const axios = new AxiosMockAdapter(_axios)
-
-const getSearchCustomersMock: GetSearchCustomers = {
-  pagination: { page: 1, page_size: 1, total_entries: 1, total_pages: 1 },
-  customers: [
-    {
-      id: 6773,
-      first_name: 'Jean',
-      last_name: 'Dupont',
-      address: '9 impasse Sauvey',
-      zip_code: '50100',
-      city: 'Cherbourg',
-      country: 'France',
-      country_code: 'FR',
-    },
-  ],
-}
-
-const getSearchProductsMock: GetSearchProducts = {
-  pagination: { page: 1, page_size: 1, total_entries: 1, total_pages: 1 },
-  products: [
-    {
-      id: 67,
-      label: 'Tesla Model S',
-      vat_rate: '0',
-      unit: 'hour',
-      unit_price: '1980',
-      unit_price_without_tax: '1800',
-      unit_tax: '180',
-    },
-  ],
-}
-
-async function selectCustomer() {
-  await userEvent.click(screen.getByLabelText(/customer/i))
-  await userEvent.click(await screen.findByText(/^jean\sdupont$/i))
-}
-
-async function selectProduct() {
-  await userEvent.click(screen.getByLabelText(/product/i))
-  await userEvent.click(await screen.findByText(/^tesla\smodel\ss$/i))
-}
-
-async function setQuantity() {
-  await userEvent.type(screen.getByLabelText(/quantity/i), '1')
-}
-
-async function submitForm() {
-  await userEvent.click(screen.getByRole('button', { name: /submit/i }))
-}
 
 const onSubmit = jest.fn()
 
