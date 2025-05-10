@@ -11,6 +11,7 @@ import 'react-datepicker/dist/react-datepicker.css'
 
 export type InvoiceEditorData = {
   customer: Customer | null
+  finalized: string
   date?: Date
   deadline?: Date
   lines: {
@@ -35,8 +36,11 @@ export function InvoiceEditor({ onSubmit, defaultValues }: InvoiceEditorProps) {
     handleSubmit,
     formState: { errors, isSubmitSuccessful },
     setError,
+    setValue,
+    watch,
   } = useForm<InvoiceEditorData>({
     defaultValues: {
+      finalized: 'false',
       customer: null,
       lines: [{ product: null }],
       ...defaultValues,
@@ -45,12 +49,23 @@ export function InvoiceEditor({ onSubmit, defaultValues }: InvoiceEditorProps) {
 
   const { fields, append, remove } = useFieldArray({ control, name: 'lines' })
 
+  const isFinalized = watch('finalized') === 'true'
+
   async function onSubmitMiddleware(data: InvoiceEditorData) {
     try {
       await onSubmit(data)
     } catch (error) {
       setError('root', { message: 'Oups! Something went wrong. Try again.' })
     }
+  }
+
+  function saveDraft() {
+    handleSubmit(onSubmitMiddleware)()
+  }
+
+  function finalize() {
+    setValue('finalized', 'true')
+    handleSubmit(onSubmitMiddleware)()
   }
 
   return (
@@ -68,6 +83,7 @@ export function InvoiceEditor({ onSubmit, defaultValues }: InvoiceEditorProps) {
       )}
 
       <form onSubmit={handleSubmit(onSubmitMiddleware)}>
+        <input hidden type="text" {...register('finalized')} />
         <div>
           <Form.Label htmlFor="customer">Customer</Form.Label>
           <Controller
@@ -79,6 +95,7 @@ export function InvoiceEditor({ onSubmit, defaultValues }: InvoiceEditorProps) {
                 inputId="customer"
                 value={field.value}
                 onChange={field.onChange}
+                isDisabled={!!isFinalized}
               />
             )}
           />
@@ -94,6 +111,7 @@ export function InvoiceEditor({ onSubmit, defaultValues }: InvoiceEditorProps) {
                 id="date"
                 selected={field.value}
                 onChange={field.onChange}
+                readOnly={!!isFinalized}
               />
             )}
           />
@@ -108,6 +126,7 @@ export function InvoiceEditor({ onSubmit, defaultValues }: InvoiceEditorProps) {
                 id="deadline"
                 selected={field.value}
                 onChange={field.onChange}
+                readOnly={!!isFinalized}
               />
             )}
           />
@@ -127,6 +146,7 @@ export function InvoiceEditor({ onSubmit, defaultValues }: InvoiceEditorProps) {
                     inputId={`lines.${index}.product`}
                     value={field.value}
                     onChange={field.onChange}
+                    isDisabled={!!isFinalized}
                   />
                 )}
               />
@@ -137,6 +157,7 @@ export function InvoiceEditor({ onSubmit, defaultValues }: InvoiceEditorProps) {
               <input
                 {...register(`lines.${index}.label`)}
                 id={`lines.${index}.label`}
+                readOnly={!!isFinalized}
               />
             </div>
             <div>
@@ -148,6 +169,7 @@ export function InvoiceEditor({ onSubmit, defaultValues }: InvoiceEditorProps) {
                 })}
                 id={`lines.${index}.quantity`}
                 type="number"
+                readOnly={!!isFinalized}
               />
               <Form.Error>
                 {errors.lines?.[index]?.quantity?.message}
@@ -158,6 +180,7 @@ export function InvoiceEditor({ onSubmit, defaultValues }: InvoiceEditorProps) {
               <select
                 {...register(`lines.${index}.unit`)}
                 id={`lines.${index}.unit`}
+                disabled={!!isFinalized}
               >
                 <option value="">-</option>
                 <option value="hour">Hour</option>
@@ -171,6 +194,7 @@ export function InvoiceEditor({ onSubmit, defaultValues }: InvoiceEditorProps) {
                 {...register(`lines.${index}.price`)}
                 id={`lines.${index}.price`}
                 type="number"
+                readOnly={!!isFinalized}
               />
             </div>
             <div>
@@ -179,9 +203,10 @@ export function InvoiceEditor({ onSubmit, defaultValues }: InvoiceEditorProps) {
                 {...register(`lines.${index}.tax`)}
                 id={`lines.${index}.tax`}
                 type="number"
+                readOnly={!!isFinalized}
               />
             </div>
-            {index > 0 && (
+            {index > 0 && !isFinalized && (
               <button type="button" onClick={() => remove(index)}>
                 DELETE
               </button>
@@ -189,14 +214,33 @@ export function InvoiceEditor({ onSubmit, defaultValues }: InvoiceEditorProps) {
           </div>
         ))}
 
-        <button
-          type="button"
-          onClick={() => append({ product: null, quantity: 1 })}
-        >
-          APPEND
-        </button>
+        {!isFinalized && (
+          <button
+            type="button"
+            onClick={() => append({ product: null, quantity: 1 })}
+          >
+            APPEND
+          </button>
+        )}
 
-        <button className="btn btn-primary">Submit</button>
+        {!isFinalized && (
+          <>
+            <button
+              className="btn btn-secondary"
+              type="button"
+              onClick={saveDraft}
+            >
+              Submit
+            </button>
+            <button
+              className="btn btn-primary"
+              type="button"
+              onClick={finalize}
+            >
+              Finalize
+            </button>
+          </>
+        )}
       </form>
     </>
   )

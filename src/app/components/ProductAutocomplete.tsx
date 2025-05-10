@@ -7,13 +7,19 @@ import { GroupBase } from 'react-select'
 
 interface Props {
   inputId?: string
+  isDisabled?: boolean
   value: Product | null
   onChange: (product: Product | null) => void
 }
 
 const defaultAdditional = { page: 1 }
 
-const ProductAutocomplete = ({ inputId, value, onChange }: Props) => {
+const ProductAutocomplete = ({
+  inputId,
+  isDisabled,
+  value,
+  onChange,
+}: Props) => {
   const api = useApi()
 
   const loadOptions: LoadOptions<
@@ -48,6 +54,7 @@ const ProductAutocomplete = ({ inputId, value, onChange }: Props) => {
       value={value}
       onChange={onChange}
       loadOptions={loadOptions}
+      isDisabled={isDisabled}
     />
   )
 }

@@ -48,6 +48,7 @@ describe('InvoiceNew', () => {
         customer_id: getSearchCustomersMock.customers[0].id,
         date: '',
         deadline: '',
+        finalized: false,
         invoice_lines_attributes: [
           {
             product_id: getSearchProductsMock.products[0].id,

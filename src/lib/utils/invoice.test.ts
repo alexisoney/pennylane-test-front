@@ -5,7 +5,7 @@ import { InvoiceEditorData } from 'app/components/InvoiceEditor'
 describe('Invoice', () => {
   describe('toApiPayload', () => {
     it('throws an error if customer is missing', () => {
-      const payload = { customer: null, lines: [] }
+      const payload = { customer: null, finalized: 'false', lines: [] }
       expect(() => toApiPayload(payload)).toThrowError('Customer is required')
     })
 
@@ -21,6 +21,7 @@ describe('Invoice', () => {
           country: 'France',
           country_code: 'FR',
         },
+        finalized: 'false',
         lines: [
           {
             product: null,
@@ -45,6 +46,7 @@ describe('Invoice', () => {
         },
         date: new Date('2021-02-03'),
         deadline: new Date('2021-02-03'),
+        finalized: 'false',
         lines: [
           {
             product: {
@@ -69,6 +71,7 @@ describe('Invoice', () => {
         customer_id: 6773,
         date: '2021-02-03',
         deadline: '2021-02-03',
+        finalized: false,
         invoice_lines_attributes: [
           {
             product_id: 67,

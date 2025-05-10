@@ -3,7 +3,7 @@ import { InvoiceCreatePayload, InvoiceLine } from 'types'
 import { to_YYYY_MM_DD } from './date'
 
 export function toApiPayload(data: InvoiceEditorData): InvoiceCreatePayload {
-  const { customer, date, deadline, lines } = data
+  const { customer, date, deadline, lines, finalized } = data
 
   if (!customer) throw new Error('Customer is required')
 
@@ -11,6 +11,7 @@ export function toApiPayload(data: InvoiceEditorData): InvoiceCreatePayload {
     customer_id: customer.id,
     date: to_YYYY_MM_DD(date),
     deadline: to_YYYY_MM_DD(deadline),
+    finalized: finalized === 'true',
     invoice_lines_attributes: lines.map(mapInvoiceLine),
   }
 }
